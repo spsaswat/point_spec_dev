@@ -22,6 +22,10 @@ data <- data.table(data)
 # Find the columns that have 'Reflect' in their names
 reflect_cols <- grep("Reflect", names(data))
 
+# Find the columns that have 'Wavlen' in their names
+wave_cols <- grep("Wavlen", names(data))
+wave_data <- data[, ..wave_cols]
+
 # Exclude the "Avg Reflect" column
 reflect_cols <- reflect_cols[names(data)[reflect_cols] != "Avg Reflect"]
 
@@ -29,8 +33,14 @@ reflect_cols <- reflect_cols[names(data)[reflect_cols] != "Avg Reflect"]
 output_data <- data[, ..reflect_cols]
 setnames(output_data, paste0("Reflect_", 1:length(reflect_cols)))
 
+output_data[, Wavelength := wave_data[[2]]]
+
 # Remove rows that have all blank values
 output_data <- output_data[rowSums(output_data == "") != ncol(output_data), ]
+
+# last column becomes the first column and all the other columns shift one position to the right
+#output_data <- output_data[, c(ncol(output_data), 1:(ncol(output_data)-1))]
+
 
 # Get directory and filename prefix from file_path
 dir_path <- dirname(file_path)
@@ -41,3 +51,7 @@ output_filename <- file.path(dir_path, paste0(file_prefix, "_reflectance.csv"))
 
 # Write to CSV
 fwrite(output_data, file = output_filename)
+
+#write.csv(output_data, file = output_filename, row.names = FALSE)
+
+
