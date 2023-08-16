@@ -18,3 +18,4 @@ file_path <- file.path(dir_path, "requirements.txt")
 
 # Writing to the file in the specified directory
 writeLines(all_info, file_path)
+
