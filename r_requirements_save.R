@@ -1,4 +1,4 @@
-# Please donot rerun the code unles you are just starting a project
+# Please do not rerun the code unless you are just starting a project
 
 # Directory path
 dir_path <- "D:/Projects/AnacondaFiles/APPF_codes/point_spec_dev"
