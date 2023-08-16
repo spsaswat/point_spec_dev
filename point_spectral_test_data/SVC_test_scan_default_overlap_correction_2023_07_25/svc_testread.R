@@ -39,8 +39,9 @@ output_data[, Wavelength := wave_data[[2]]]
 output_data <- output_data[rowSums(output_data == "") != ncol(output_data), ]
 
 # last column becomes the first column and all the other columns shift one position to the right
-#output_data <- output_data[, c(ncol(output_data), 1:(ncol(output_data)-1))]
-
+all_colnames <- colnames(output_data)
+new_order <- c(all_colnames[length(all_colnames)], all_colnames[1:(length(all_colnames)-1)])
+output_data <- output_data[, ..new_order]
 
 # Get directory and filename prefix from file_path
 dir_path <- dirname(file_path)
