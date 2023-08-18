@@ -3,7 +3,7 @@ library(data.table)
 library(ggplot2)
 
 # add your file path here
-file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\ASD4_250723_TEST_NO_GASKET\\all.txt"
+file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\ASD4_250723_TEST_NO_GASKET\\all_reflectance.txt"
 raw_ASD_text_export <- read.csv(file_path)
 
 spectral_data <- transpose(raw_ASD_text_export, make.names = "Wavelength")
@@ -16,10 +16,10 @@ spectral_data$Sample <- colnames(raw_ASD_text_export)[-1]
 num_samples <- ncol(raw_ASD_text_export) - 1
 
 # Assign provided group names or col names # Calib may be actually reflectance from white reference
-spectral_data$Group <- c("Calib", "Eucalyptus #1", "Eucalyptus #2", "Nb #1", "Nb #2", "Wheat #1", "Wheat #2")
+spectral_data$Group <- c("Eucalyptus #1", "Eucalyptus #2", "Nb #1", "Nb #2", "Wheat #1", "Wheat #2")
 
 
-spectra_for_comparison <- spectral_data[2:7, ] # get all actual leaves
+spectra_for_comparison <- spectral_data[1:6, ] # get all actual leaves
 
 # Convert to data.table
 setDT(spectra_for_comparison)
