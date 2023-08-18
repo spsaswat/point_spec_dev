@@ -36,7 +36,7 @@ melted_spectra$wavelength = as.numeric(levels(melted_spectra$wavelength))[melted
 graph <- ggplot(data = melted_spectra, aes(x=wavelength, y=reflectance, group=Sample, color=Group)) +
   geom_line() +
   scale_x_continuous(breaks = c(400, 700, 1000, 1500, 2000, 2500), expand = c(0.01,0.01)) +
-  scale_y_continuous(breaks = c(0,0.2,0.4,0.6,0.8), expand = c(0.01,0.1))+
+  scale_y_continuous(breaks = c(0,0.2,0.4,0.6,0.8), limits = c(0, 1), expand = c(0.01,0.1)) +
   labs(x="Wavelength (nm)", y="Reflectance", color="Plant")
 
 graph
@@ -46,3 +46,4 @@ save_path <- file.path(dirname(file_path), paste0(tools::file_path_sans_ext(base
 
 # Saving the graph
 ggsave(filename = save_path, plot = graph, width = 10, height = 6)
+
