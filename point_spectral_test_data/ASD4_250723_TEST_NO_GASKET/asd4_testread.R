@@ -27,17 +27,17 @@ setDT(spectra_for_comparison)
 melted_spectra <- melt(spectra_for_comparison, id.vars = c("Group", "Sample"), variable.name = "wavelength", value.name = "reflectance")
 melted_spectra$wavelength = as.numeric(levels(melted_spectra$wavelength))[melted_spectra$wavelength]
 
-min_val <- min(melted_spectra$reflectance, na.rm = TRUE)
-max_val <- max(melted_spectra$reflectance, na.rm = TRUE)
+# min_val <- min(melted_spectra$reflectance, na.rm = TRUE)
+# max_val <- max(melted_spectra$reflectance, na.rm = TRUE)
 
-melted_spectra[, normalized_reflectance := (reflectance - min_val) / (max_val - min_val)]
+# melted_spectra[, normalized_reflectance := (reflectance - min_val) / (max_val - min_val)]
 
-
-graph <- ggplot(data = melted_spectra, aes(x=wavelength, y=normalized_reflectance, group=Sample, color=Group)) +
+# if want to use normalization please change y=reflectance to y = normalized_reflectance
+graph <- ggplot(data = melted_spectra, aes(x=wavelength, y=reflectance, group=Sample, color=Group)) +
   geom_line() +
   scale_x_continuous(breaks = c(400, 700, 1000, 1500, 2000, 2500), expand = c(0.01,0.01)) +
   scale_y_continuous(breaks = c(0,0.2,0.4,0.6,0.8), expand = c(0.01,0.1))+
-  labs(x="Wavelength (nm)", y="Normalized Reflectance", color="Plant")
+  labs(x="Wavelength (nm)", y="Reflectance", color="Plant")
 
 graph
 
