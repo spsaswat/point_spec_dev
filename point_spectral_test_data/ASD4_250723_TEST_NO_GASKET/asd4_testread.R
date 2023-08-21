@@ -27,10 +27,13 @@ setDT(spectra_for_comparison)
 melted_spectra <- melt(spectra_for_comparison, id.vars = c("Group", "Sample"), variable.name = "wavelength", value.name = "reflectance")
 melted_spectra$wavelength = as.numeric(levels(melted_spectra$wavelength))[melted_spectra$wavelength]
 
-# min_val <- min(melted_spectra$reflectance, na.rm = TRUE)
-# max_val <- max(melted_spectra$reflectance, na.rm = TRUE)
+min_val <- min(melted_spectra$reflectance, na.rm = TRUE)
+max_val <- max(melted_spectra$reflectance, na.rm = TRUE)
 
-# melted_spectra[, normalized_reflectance := (reflectance - min_val) / (max_val - min_val)]
+print(min_val)
+print(max_val)
+
+melted_spectra[, normalized_reflectance := (reflectance - min_val) / (max_val - min_val)]
 
 # if want to use normalization please change y=reflectance to y = normalized_reflectance
 graph <- ggplot(data = melted_spectra, aes(x=wavelength, y=reflectance, group=Sample, color=Group)) +
