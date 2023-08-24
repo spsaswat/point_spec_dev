@@ -5,58 +5,10 @@ library(purrr)
 library(data.table)
 library(ggplot2)
 
-# jump_correction <- function(stacked, jumps) {
-#   if (length(jumps) > 0) {
-#     stacked <- map(stacked, function(data_frame) {
-#       value <- data_frame$value
-#       wave <- data_frame$wave
-#       
-#       for (jump in jumps) {
-#         j <- jump / 1000
-#         j_1 <- (jump - 1) / 1000
-#         j1 <- (jump + 1) / 1000
-#         j2 <- (jump + 2) / 1000
-#         
-#         if (!(j_1 %in% wave) || !(j %in% wave) || !(j1 %in% wave) || !(j2 %in% wave)) {
-#           next # skip to next iteration if any of the jumps don't exist in wave
-#         }
-#         
-#         o_index <- which(wave == j_1)[1]
-#         o_val <- value[o_index]
-#         o <- c(j_1, o_val)
-#         
-#         p_index <- which(wave == j)[1]
-#         p_val <- value[p_index]
-#         p <- c(j, p_val)
-#         
-#         q_index <- which(wave == j1)[1]
-#         q_val <- value[q_index]
-#         q <- c(j1, q_val)
-#         
-#         r_index <- which(wave == j2)[1]
-#         r_val <- value[r_index]
-#         r <- c(j2, r_val)
-#         
-#         t1 <- (p[2] - o[2]) / (p[1] - o[1])
-#         t2 <- (r[2] - q[2]) / (r[1] - q[1])
-#         
-#         qqy <- ((t1 + t2) * (q[1] - p[1])) / 2 + p[2]
-#         correction <- qqy / q[2]
-#         
-#         value[(p_index + 1):length(value)] <- value[(p_index + 1):length(value)] * correction
-#       }
-#       
-#       data_frame$value <- value
-#       return(data_frame)
-#     })
-#   }
-#   
-#   return(stacked)
-# }
 
 
 # add your file path here
-file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\ASD_fieldspec3_2023_07_25_test\\all.txt"
+file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2023-08-22_MC_test_ASD3\\all.txt"
 raw_ASD_text_export <- read.csv(file_path)
 
 spectral_data <- data.table::transpose(raw_ASD_text_export, make.names = "Wavelength")
@@ -69,10 +21,17 @@ spectral_data$Sample <- colnames(raw_ASD_text_export)[-1]
 num_samples <- ncol(raw_ASD_text_export) - 1
 
 # Assign provided group names or col names
-spectral_data$Group <- c("Reference", "Blank dark background", "Eucalyptus #1", "Eucalyptus #2", "Nb #1", "Nb #2", "Wheat #1", "Wheat #2")
+spectral_data$Group <- c("black ref","color checker: white","color checker: blue","color checker: orange","color checker: brown","neon marker: orange", "neon marker: green",
+                         "neon marker: pink", "glitter gel pen: red", "glitter gel pen: green", "glitter gel pen: blue", "pencil (2B)","white ref")
 
+all_rows <- 1:nrow(spectral_data)
+new_order <- c(all_rows[1], all_rows[length(all_rows)], all_rows[2:(length(all_rows)-1)])
+spectral_data <- spectral_data[new_order, ]
+rownames(spectral_data) <- NULL
+num_rows <- nrow(spectral_data)
+num_rows
 
-spectra_for_comparison <- spectral_data[3:8, ] # get only our 4 actual leaves
+spectra_for_comparison <- spectral_data[3:num_rows, ] # get all reflectance except calib
 
 # Convert to data.table
 setDT(spectra_for_comparison)
@@ -80,15 +39,6 @@ setDT(spectra_for_comparison)
 melted_spectra <- melt(spectra_for_comparison, id.vars = c("Group", "Sample"), variable.name = "wavelength", value.name = "reflectance")
 melted_spectra$wavelength = as.numeric(levels(melted_spectra$wavelength))[melted_spectra$wavelength]
 
-# # Assuming you have known jump points
-# jumps <- c(1000, 2000) # replace with your actual jump wavelengths
-# 
-# # Preparing data for jump correction
-# list_data <- split(melted_spectra, melted_spectra$Sample)
-# corrected_data <- jump_correction(list_data, jumps)
-# 
-# # Binding all the corrected data back into a single data frame
-# melted_spectra_corrected <- bind_rows(corrected_data)
 
 graph <- ggplot(data = melted_spectra, aes(x=wavelength, y=reflectance, group=Sample, color=Group)) +
   geom_line() +
