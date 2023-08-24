@@ -1,6 +1,6 @@
 library(data.table)
 
-file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\SVC_test_scan_default_overlap_correction_2023_07_25\\all.csv"
+file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2022-08-23_MC_test_SVC\\all.csv"
 data <- read.csv(file_path, header = FALSE, stringsAsFactors = FALSE)
 
 # Find the row that contains the headers you're interested in
