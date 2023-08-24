@@ -24,6 +24,7 @@ num_samples <- ncol(raw_ASD_text_export) - 1
 spectral_data$Group <- c("black ref","color checker: white","color checker: blue","color checker: orange","color checker: brown","neon marker: orange", "neon marker: green",
                          "neon marker: pink", "glitter gel pen: red", "glitter gel pen: green", "glitter gel pen: blue", "pencil (2B)","white ref")
 
+# Move last rowto second and shift every other row
 all_rows <- 1:nrow(spectral_data)
 new_order <- c(all_rows[1], all_rows[length(all_rows)], all_rows[2:(length(all_rows)-1)])
 spectral_data <- spectral_data[new_order, ]
