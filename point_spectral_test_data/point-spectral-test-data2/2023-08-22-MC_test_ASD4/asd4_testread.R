@@ -3,7 +3,7 @@ library(data.table)
 library(ggplot2)
 
 # add your file path here
-file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\ASD_fieldspec3_2023_07_25_test\\all.txt"
+file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\ASD4_250723_TEST_NO_GASKET\\all_reflectance.txt"
 raw_ASD_text_export <- read.csv(file_path)
 
 spectral_data <- transpose(raw_ASD_text_export, make.names = "Wavelength")
@@ -15,11 +15,11 @@ spectral_data$Sample <- colnames(raw_ASD_text_export)[-1]
 # Determine the number of samples
 num_samples <- ncol(raw_ASD_text_export) - 1
 
-# Assign provided group names or col names
-spectral_data$Group <- c("Reference", "Blank dark background", "Eucalyptus #1", "Eucalyptus #2", "Nb #1", "Nb #2", "Wheat #1", "Wheat #2")
+# Assign provided group names or col names # Calib may be actually reflectance from white reference
+spectral_data$Group <- c("Eucalyptus #1", "Eucalyptus #2", "Nb #1", "Nb #2", "Wheat #1", "Wheat #2")
 
 
-spectra_for_comparison <- spectral_data[3:8, ] # get only our 4 actual leaves
+spectra_for_comparison <- spectral_data[1:6, ] # get all actual leaves
 
 # Convert to data.table
 setDT(spectra_for_comparison)
@@ -27,6 +27,15 @@ setDT(spectra_for_comparison)
 melted_spectra <- melt(spectra_for_comparison, id.vars = c("Group", "Sample"), variable.name = "wavelength", value.name = "reflectance")
 melted_spectra$wavelength = as.numeric(levels(melted_spectra$wavelength))[melted_spectra$wavelength]
 
+min_val <- min(melted_spectra$reflectance, na.rm = TRUE)
+max_val <- max(melted_spectra$reflectance, na.rm = TRUE)
+
+print(min_val)
+print(max_val)
+
+melted_spectra[, normalized_reflectance := (reflectance - min_val) / (max_val - min_val)]
+
+# if want to use normalization please change y=reflectance to y = normalized_reflectance
 graph <- ggplot(data = melted_spectra, aes(x=wavelength, y=reflectance, group=Sample, color=Group)) +
   geom_line() +
   scale_x_continuous(breaks = c(400, 700, 1000, 1500, 2000, 2500), expand = c(0.01,0.01)) +
