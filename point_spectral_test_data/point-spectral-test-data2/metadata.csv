@@ -1,14 +1,14 @@
-sample_num,name
-0,black ref
-1,color checker: white
-2,color checker: blue
-3,color checker: orange
-4,color checker: brown
-5,neon marker: orange
-6,neon marker: green
-7,neon marker: pink
-8,glitter gel pen: red
-9,glitter gel pen: green
-10,glitter gel pen: blue
-11,pencil (2B?)
-12,white ref
+sample_num,name,ignore
+0,black ref,Y
+1,color checker: white,
+2,color checker: blue,
+3,color checker: orange,
+4,color checker: brown,
+5,neon marker: orange,
+6,neon marker: green,
+7,neon marker: pink,
+8,glitter gel pen: red,
+9,glitter gel pen: green,
+10,glitter gel pen: blue,
+11,pencil,
+12,white ref,Y

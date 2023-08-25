@@ -2,6 +2,14 @@
 library(data.table)
 library(ggplot2)
 
+# read the metadata
+# Define the file path
+file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\metadata.csv"
+
+# Read the CSV file
+metadata <- read.csv(file_path, stringsAsFactors = FALSE)
+
+
 # add your file path here
 file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2023-08-22-MC_test_ASD4\\all.txt"
 raw_ASD_text_export <- read.csv(file_path)
@@ -16,18 +24,21 @@ spectral_data$Sample <- colnames(raw_ASD_text_export)[-1]
 num_samples <- ncol(raw_ASD_text_export) - 1
 
 # Assign provided group names or col names
-spectral_data$Group <- c("black ref","color checker: white","color checker: blue","color checker: orange","color checker: brown","neon marker: orange", "neon marker: green",
-                         "neon marker: pink", "glitter gel pen: red", "glitter gel pen: green", "glitter gel pen: blue", "pencil (2B)","white ref")
+spectral_data$Group <-metadata$name
 
-# Move last rowto second and shift every other row
-all_rows <- 1:nrow(spectral_data)
-new_order <- c(all_rows[1], all_rows[length(all_rows)], all_rows[2:(length(all_rows)-1)])
-spectral_data <- spectral_data[new_order, ]
-rownames(spectral_data) <- NULL
-num_rows <- nrow(spectral_data)
-num_rows
+exclude_names <- metadata$name[toupper(metadata$ignore) == "Y"]
 
-spectra_for_comparison <- spectral_data[3:num_rows, ] # get all reflectance except calib
+# Filter spectral_data to exclude rows with Group values in exclude_names
+spectra_for_comparison <- spectral_data[!spectral_data$Group %in% exclude_names, ]
+
+# # Move last rowto second and shift every other row
+# all_rows <- 1:nrow(spectral_data)
+# new_order <- c(all_rows[1], all_rows[length(all_rows)], all_rows[2:(length(all_rows)-1)])
+# spectral_data <- spectral_data[new_order, ]
+# rownames(spectral_data) <- NULL
+# num_rows <- nrow(spectral_data)
+# 
+# spectra_for_comparison <- spectral_data[3:num_rows, ] # get all reflectance except calib
 
 # Convert to data.table
 setDT(spectra_for_comparison)
