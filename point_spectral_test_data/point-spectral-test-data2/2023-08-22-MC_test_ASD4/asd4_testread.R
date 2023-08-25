@@ -3,7 +3,7 @@ library(data.table)
 library(ggplot2)
 
 # add your file path here
-file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\ASD4_250723_TEST_NO_GASKET\\all_reflectance.txt"
+file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2023-08-22-MC_test_ASD4\\all.txt"
 raw_ASD_text_export <- read.csv(file_path)
 
 spectral_data <- transpose(raw_ASD_text_export, make.names = "Wavelength")
@@ -15,11 +15,19 @@ spectral_data$Sample <- colnames(raw_ASD_text_export)[-1]
 # Determine the number of samples
 num_samples <- ncol(raw_ASD_text_export) - 1
 
-# Assign provided group names or col names # Calib may be actually reflectance from white reference
-spectral_data$Group <- c("Eucalyptus #1", "Eucalyptus #2", "Nb #1", "Nb #2", "Wheat #1", "Wheat #2")
+# Assign provided group names or col names
+spectral_data$Group <- c("black ref","color checker: white","color checker: blue","color checker: orange","color checker: brown","neon marker: orange", "neon marker: green",
+                         "neon marker: pink", "glitter gel pen: red", "glitter gel pen: green", "glitter gel pen: blue", "pencil (2B)","white ref")
 
+# Move last rowto second and shift every other row
+all_rows <- 1:nrow(spectral_data)
+new_order <- c(all_rows[1], all_rows[length(all_rows)], all_rows[2:(length(all_rows)-1)])
+spectral_data <- spectral_data[new_order, ]
+rownames(spectral_data) <- NULL
+num_rows <- nrow(spectral_data)
+num_rows
 
-spectra_for_comparison <- spectral_data[1:6, ] # get all actual leaves
+spectra_for_comparison <- spectral_data[3:num_rows, ] # get all reflectance except calib
 
 # Convert to data.table
 setDT(spectra_for_comparison)
