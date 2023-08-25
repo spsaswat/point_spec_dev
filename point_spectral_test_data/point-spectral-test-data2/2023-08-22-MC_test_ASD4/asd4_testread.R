@@ -3,7 +3,6 @@ library(data.table)
 library(ggplot2)
 
 # read the metadata
-# Define the file path
 file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\metadata.csv"
 
 # Read the CSV file
