@@ -131,11 +131,11 @@ melted_spectra_ASD4$method <- "ASD4"
 # file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2023-08-22-MC_test_ASD4\\all.txt"
 # Extract directory name from file_path
 desired_name <- file_path_sans_ext(basename(dirname((dirname(file_path)))))
-desired_name
+
 
 # Extract target directory to save files
 target_directory <- dirname(dirname(file_path))
-target_directory
+
 
 # Remove the sample column
 melted_spectra_ASD3 <- select(melted_spectra_ASD3, -Sample)
@@ -213,8 +213,61 @@ cols_SVC <- cols_SVC[!grepl("method_", cols_SVC)]
 cols_ASD3 <- cols_ASD3[!grepl("method_", cols_ASD3)]
 cols_ASD4 <- cols_ASD4[!grepl("method_", cols_ASD4)]
 
-# Print out to check if everything is as expected
-print(cols_SVC)
-print(cols_ASD3)
-print(cols_ASD4)
-print(names(final_merged_data))
+
+
+# Calculating ratios
+for (col in 1:length(cols_SVC)) {
+  print(paste("For column:", cols_SVC[col]))
+  final_merged_data[paste0("Ratio_SVC_ASD3_", cols_SVC[col])] <- final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD3[col]]]
+  final_merged_data[paste0("Ratio_SVC_ASD4_", cols_SVC[col])] <- final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD4[col]]]
+  final_merged_data[paste0("Ratio_ASD3_ASD4_", cols_ASD3[col])] <- final_merged_data[[cols_ASD3[col]]] / final_merged_data[[cols_ASD4[col]]]
+  # You can also print the ratios before adding them to the dataframe
+  print(head(final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD3[col]]]))
+}
+
+file_merged_data_wr <- file.path(target_directory, paste0(desired_name, "_merged_wr.csv"))
+
+# saved the merged data
+write.csv(final_merged_data, file_merged_data_wr, row.names = FALSE)
+
+
+# Filter out only the relevant columns (wavelength and Ratio_SVC_ASD3_*)
+final_long_data <- final_merged_data %>% 
+  select(wavelength, starts_with("Ratio_SVC_ASD3")) %>% 
+  gather(key = "RatioType", value = "Value", -wavelength)
+
+
+# Calculate the absolute difference between each ratio and 1
+final_long_data$Abs_Difference_From_1 <- abs(final_long_data$Value - 1)
+
+# Calculate the average distance from 1 for each ratio type
+average_distances <- final_long_data %>%
+  group_by(RatioType) %>%
+  summarise(Avg_Distance = mean(Abs_Difference_From_1))
+# 
+# # Calculate the average of the average distances
+# overall_avg_distance <- mean(average_distances$Avg_Distance)
+# 
+# print(paste("The overall average distance from 1 is:", overall_avg_distance))
+# 
+
+
+# Create the ggplot
+p <- ggplot(final_long_data, aes(x = wavelength, y = Value, color = RatioType)) +
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 1 + overall_avg_distance, linetype = "dotted", color = "blue") +
+  geom_hline(yintercept = 1 - overall_avg_distance, linetype = "dotted", color = "blue") +
+  annotate("text", x = Inf, y = 1, label = "1", hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  annotate("text", x = Inf, y = 1 + overall_avg_distance, label = paste("1 + ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  annotate("text", x = Inf, y = 1 - overall_avg_distance, label = paste("1 - ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  labs(title = "Deviations from Base 1 for Ratio_SVC_ASD3 Columns",
+       y = "Reflectance Ratio",
+       x = "Wavelength",
+       color = "Ratio Type")
+
+# Show the plot
+p
+
+
+
