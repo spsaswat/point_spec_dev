@@ -151,16 +151,19 @@ file_name_ASD4 <- file.path(target_directory, paste0(desired_name, "_ASD4.csv"))
 
 
 
-# Save data frames to CSV
-write.csv(melted_spectra_SVCC, file_name_SVCC, row.names = FALSE)
-write.csv(melted_spectra_ASD3, file_name_ASD3, row.names = FALSE)
-write.csv(melted_spectra_ASD4, file_name_ASD4, row.names = FALSE)
+# # Save data frames to CSV
+# write.csv(melted_spectra_SVCC, file_name_SVCC, row.names = FALSE)
+# write.csv(melted_spectra_ASD3, file_name_ASD3, row.names = FALSE)
+# write.csv(melted_spectra_ASD4, file_name_ASD4, row.names = FALSE)
 
 # Transform the data
 df_transformed_SVCC <- melted_spectra_SVCC %>%
   select(-method) %>%  # remove 'method' if you want to keep it, remove this line
   pivot_wider(names_from = Group, values_from = reflectance) %>%
   mutate(method = "SVCC")  # add 'method' back with a constant value
+
+# Round the 'wavelength' column to the nearest integer
+df_transformed_SVCC$wavelength <- round(df_transformed_SVCC$wavelength)
 
 # Transform the data
 df_transformed_ASD3 <- melted_spectra_ASD3 %>%
@@ -178,4 +181,16 @@ df_transformed_ASD4 <- melted_spectra_ASD4 %>%
 write.csv(df_transformed_SVCC, file_name_SVCC, row.names = FALSE)
 write.csv(df_transformed_ASD3, file_name_ASD3, row.names = FALSE)
 write.csv(df_transformed_ASD4, file_name_ASD4, row.names = FALSE)
+
+# Merge the first two datasets
+merged_data_1_2 <- merge(df_transformed_SVCC, df_transformed_ASD3, by = "wavelength", 
+                         all = FALSE, suffixes = c("_SVCC", "_ASD3"))
+
+# Merge the combined dataset with the third one
+final_merged_data <- merge(merged_data_1_2, df_transformed_ASD4, by = "wavelength", 
+                           all = FALSE, suffixes = c("", "_ASD4"))
+
+# Print the merged data
+print(merged_data)
+
 
