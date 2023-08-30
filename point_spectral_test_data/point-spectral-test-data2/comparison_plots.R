@@ -261,7 +261,7 @@ p <- ggplot(final_long_data, aes(x = wavelength, y = Value, color = RatioType)) 
   annotate("text", x = Inf, y = 1, label = "1", hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
   annotate("text", x = Inf, y = 1 + overall_avg_distance, label = paste("1 + ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
   annotate("text", x = Inf, y = 1 - overall_avg_distance, label = paste("1 - ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
-  labs(title = "Deviations from Base 1 for Ratio_SVC_ASD3 Columns",
+  labs(title = "Deviations from Base 1 for Reflectance SVC:ASD3",
        y = "Reflectance Ratio",
        x = "Wavelength",
        color = "Ratio Type")
@@ -270,4 +270,20 @@ p <- ggplot(final_long_data, aes(x = wavelength, y = Value, color = RatioType)) 
 p
 
 
+# Constructing the save path for the graph
+save_path <- file.path(dirname(file_path), paste0(tools::file_path_sans_ext(basename(file_path)), ".png"))
 
+desired_name <- file_path_sans_ext(basename(dirname((dirname(file_path)))))
+
+# Extract target directory to save files
+target_directory <- dirname(dirname(file_path))
+
+
+
+# Create new names for each data frame
+file_name_SVC <- file.path(target_directory, paste0(desired_name, "_SVC.csv"))
+file_name_ASD3 <- file.path(target_directory, paste0(desired_name, "_ASD3.csv"))
+file_name_ASD4 <- file.path(target_directory, paste0(desired_name, "_ASD4.csv"))
+
+# Saving the graph
+ggsave(filename = save_path, plot = graph, width = 10, height = 6)
