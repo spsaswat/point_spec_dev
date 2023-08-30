@@ -6,7 +6,7 @@ library(tools)
 
 
 
-# SVCC
+# SVC
 
 # read the metadata
 meta_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\metadata.csv"
@@ -38,10 +38,10 @@ spectra_for_comparison <- spectral_data[!spectral_data$Group %in% exclude_names,
 # Convert to data.table
 setDT(spectra_for_comparison)
 
-melted_spectra_SVCC <- melt(spectra_for_comparison, id.vars = c("Group", "Sample"), variable.name = "wavelength", value.name = "reflectance")
-melted_spectra_SVCC$wavelength = as.numeric(levels(melted_spectra_SVCC$wavelength))[melted_spectra_SVCC$wavelength]
+melted_spectra_SVC <- melt(spectra_for_comparison, id.vars = c("Group", "Sample"), variable.name = "wavelength", value.name = "reflectance")
+melted_spectra_SVC$wavelength = as.numeric(levels(melted_spectra_SVC$wavelength))[melted_spectra_SVC$wavelength]
 
-melted_spectra_SVCC[, reflectance := (reflectance/100)]
+melted_spectra_SVC[, reflectance := (reflectance/100)]
 
 
 # ASD4
@@ -124,7 +124,7 @@ interpolate_reflectance <- function(wavelength, reflectance, new_wavelength) {
 }
 
 # Add method identifier
-melted_spectra_SVCC$method <- "SVCC"
+melted_spectra_SVC$method <- "SVC"
 melted_spectra_ASD3$method <- "ASD3"
 melted_spectra_ASD4$method <- "ASD4"
 
@@ -140,11 +140,11 @@ target_directory
 # Remove the sample column
 melted_spectra_ASD3 <- select(melted_spectra_ASD3, -Sample)
 melted_spectra_ASD4 <- select(melted_spectra_ASD4, -Sample)
-melted_spectra_SVCC <- select(melted_spectra_SVCC, -Sample)
+melted_spectra_SVC <- select(melted_spectra_SVC, -Sample)
 
 
 # Create new names for each data frame
-file_name_SVCC <- file.path(target_directory, paste0(desired_name, "_SVCC.csv"))
+file_name_SVC <- file.path(target_directory, paste0(desired_name, "_SVC.csv"))
 file_name_ASD3 <- file.path(target_directory, paste0(desired_name, "_ASD3.csv"))
 file_name_ASD4 <- file.path(target_directory, paste0(desired_name, "_ASD4.csv"))
 
@@ -152,18 +152,18 @@ file_name_ASD4 <- file.path(target_directory, paste0(desired_name, "_ASD4.csv"))
 
 
 # # Save data frames to CSV
-# write.csv(melted_spectra_SVCC, file_name_SVCC, row.names = FALSE)
+# write.csv(melted_spectra_SVC, file_name_SVC, row.names = FALSE)
 # write.csv(melted_spectra_ASD3, file_name_ASD3, row.names = FALSE)
 # write.csv(melted_spectra_ASD4, file_name_ASD4, row.names = FALSE)
 
 # Transform the data
-df_transformed_SVCC <- melted_spectra_SVCC %>%
+df_transformed_SVC <- melted_spectra_SVC %>%
   select(-method) %>%  # remove 'method' if you want to keep it, remove this line
   pivot_wider(names_from = Group, values_from = reflectance) %>%
-  mutate(method = "SVCC")  # add 'method' back with a constant value
+  mutate(method = "SVC")  # add 'method' back with a constant value
 
 # Round the 'wavelength' column to the nearest integer
-df_transformed_SVCC$wavelength <- round(df_transformed_SVCC$wavelength)
+df_transformed_SVC$wavelength <- round(df_transformed_SVC$wavelength)
 
 # Transform the data
 df_transformed_ASD3 <- melted_spectra_ASD3 %>%
@@ -178,19 +178,43 @@ df_transformed_ASD4 <- melted_spectra_ASD4 %>%
   mutate(method = "ASD4")  # add 'method' back with a constant value
 
 # Save the transformed data back to CSV if needed
-write.csv(df_transformed_SVCC, file_name_SVCC, row.names = FALSE)
+write.csv(df_transformed_SVC, file_name_SVC, row.names = FALSE)
 write.csv(df_transformed_ASD3, file_name_ASD3, row.names = FALSE)
 write.csv(df_transformed_ASD4, file_name_ASD4, row.names = FALSE)
 
 # Merge the first two datasets
-merged_data_1_2 <- merge(df_transformed_SVCC, df_transformed_ASD3, by = "wavelength", 
-                         all = FALSE, suffixes = c("_SVCC", "_ASD3"))
+merged_data_1_2 <- merge(df_transformed_SVC, df_transformed_ASD3, by = "wavelength", 
+                         all = FALSE, suffixes = c("_SVC", "_ASD3"))
 
-# Merge the combined dataset with the third one
-final_merged_data <- merge(merged_data_1_2, df_transformed_ASD4, by = "wavelength", 
-                           all = FALSE, suffixes = c("", "_ASD4"))
+# Rename the columns in df_transformed_ASD4 to add the _ASD4 suffix
+colnames(df_transformed_ASD4) <- ifelse(colnames(df_transformed_ASD4) == "wavelength", 
+                                        "wavelength", 
+                                        paste0(colnames(df_transformed_ASD4), "_ASD4"))
 
-# Print the merged data
-print(merged_data)
+# Then proceed with the merge as usual
+final_merged_data <- merge(merged_data_1_2, df_transformed_ASD4, by = "wavelength", all = FALSE)
+
+# # Merge the combined dataset with the third one
+# final_merged_data <- merge(merged_data_1_2, df_transformed_ASD4, by = "wavelength", 
+#                            all = FALSE, suffixes = c("", "_ASD4"))
+
+file_merged_data <- file.path(target_directory, paste0(desired_name, "_merged.csv"))
+
+# saved the merged data
+write.csv(final_merged_data, file_merged_data, row.names = FALSE)
 
 
+cols_SVC <- grep("_SVC", names(final_merged_data), value = TRUE)
+cols_ASD3 <- grep("_ASD3", names(final_merged_data), value = TRUE)
+cols_ASD4 <- grep("_ASD4", names(final_merged_data), value = TRUE)
+
+# Remove 'method_' columns
+cols_SVC <- cols_SVC[!grepl("method_", cols_SVC)]
+cols_ASD3 <- cols_ASD3[!grepl("method_", cols_ASD3)]
+cols_ASD4 <- cols_ASD4[!grepl("method_", cols_ASD4)]
+
+# Print out to check if everything is as expected
+print(cols_SVC)
+print(cols_ASD3)
+print(cols_ASD4)
+print(names(final_merged_data))
