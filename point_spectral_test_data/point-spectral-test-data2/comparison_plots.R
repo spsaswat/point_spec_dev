@@ -220,7 +220,7 @@ for (col in 1:length(cols_SVC)) {
   print(paste("For column:", cols_SVC[col]))
   final_merged_data[paste0("Ratio_SVC_ASD3_", cols_SVC[col])] <- final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD3[col]]]
   final_merged_data[paste0("Ratio_SVC_ASD4_", cols_SVC[col])] <- final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD4[col]]]
-  final_merged_data[paste0("Ratio_ASD3_ASD4_", cols_ASD3[col])] <- final_merged_data[[cols_ASD3[col]]] / final_merged_data[[cols_ASD4[col]]]
+  final_merged_data[paste0("Ratio_SVC_ASD4_", cols_ASD3[col])] <- final_merged_data[[cols_ASD3[col]]] / final_merged_data[[cols_ASD4[col]]]
   # You can also print the ratios before adding them to the dataframe
   print(head(final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD3[col]]]))
 }
@@ -231,6 +231,7 @@ file_merged_data_wr <- file.path(target_directory, paste0(desired_name, "_merged
 write.csv(final_merged_data, file_merged_data_wr, row.names = FALSE)
 
 
+####################################SVC v/s ASD3########################################################
 # Filter out only the relevant columns (wavelength and Ratio_SVC_ASD3_*)
 final_long_data <- final_merged_data %>% 
   select(wavelength, starts_with("Ratio_SVC_ASD3")) %>% 
@@ -245,9 +246,9 @@ average_distances <- final_long_data %>%
   group_by(RatioType) %>%
   summarise(Avg_Distance = mean(Abs_Difference_From_1))
 # 
-# # Calculate the average of the average distances
-# overall_avg_distance <- mean(average_distances$Avg_Distance)
-# 
+# Calculate the average of the average distances
+overall_avg_distance <- mean(average_distances$Avg_Distance)
+
 # print(paste("The overall average distance from 1 is:", overall_avg_distance))
 # 
 
@@ -256,11 +257,14 @@ average_distances <- final_long_data %>%
 p <- ggplot(final_long_data, aes(x = wavelength, y = Value, color = RatioType)) +
   geom_line() +
   geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
-  geom_hline(yintercept = 1 + overall_avg_distance, linetype = "dotted", color = "blue") +
   geom_hline(yintercept = 1 - overall_avg_distance, linetype = "dotted", color = "blue") +
   annotate("text", x = Inf, y = 1, label = "1", hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
-  annotate("text", x = Inf, y = 1 + overall_avg_distance, label = paste("1 + ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
   annotate("text", x = Inf, y = 1 - overall_avg_distance, label = paste("1 - ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  geom_text(data = average_distances, 
+              aes(x = Inf, y = Inf, label = paste("Avg Distance from base, y=1: ", round(overall_avg_distance, 3))),
+              hjust = 1.1, vjust = 1.1, 
+              nudge_x = -max(final_long_data$wavelength) * 0.05, 
+              nudge_y = -0.05)+
   labs(title = "Deviations from Base 1 for Reflectance SVC:ASD3",
        y = "Reflectance Ratio",
        x = "Wavelength",
@@ -270,8 +274,62 @@ p <- ggplot(final_long_data, aes(x = wavelength, y = Value, color = RatioType)) 
 p
 
 
+desired_name <- file_path_sans_ext(basename(dirname((dirname(file_path)))))
+
+# Extract target directory to save files
+target_directory <- dirname(dirname(file_path))
+
+
 # Constructing the save path for the graph
-save_path <- file.path(dirname(file_path), paste0(tools::file_path_sans_ext(basename(file_path)), ".png"))
+save_path <- file.path(target_directory, paste0(desired_name, "_SVC_ASD3.png"))
+
+# Saving the graph
+ggsave(filename = save_path, plot = p, width = 16, height = 8)
+
+
+
+####################################ASD3 v/s ASD4########################################################
+# Filter out only the relevant columns (wavelength and Ratio_ASD3_ASD4_*)
+final_long_data <- final_merged_data %>% 
+  select(wavelength, starts_with("Ratio_ASD3_ASD4")) %>% 
+  gather(key = "RatioType", value = "Value", -wavelength)
+
+
+# Calculate the absolute difference between each ratio and 1
+final_long_data$Abs_Difference_From_1 <- abs(final_long_data$Value - 1)
+
+# Calculate the average distance from 1 for each ratio type
+average_distances <- final_long_data %>%
+  group_by(RatioType) %>%
+  summarise(Avg_Distance = mean(Abs_Difference_From_1))
+
+# Calculate the average of the average distances
+overall_avg_distance <- mean(average_distances$Avg_Distance)
+
+# print(paste("The overall average distance from 1 is:", overall_avg_distance))
+# 
+
+
+# Create the ggplot
+p <- ggplot(final_long_data, aes(x = wavelength, y = Value, color = RatioType)) +
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 1 - overall_avg_distance, linetype = "dotted", color = "blue") +
+  annotate("text", x = Inf, y = 1, label = "1", hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  annotate("text", x = Inf, y = 1 - overall_avg_distance, label = paste("1 - ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  geom_text(data = average_distances, 
+            aes(x = Inf, y = Inf, label = paste("Avg Distance from base, y=1: ", round(overall_avg_distance, 3))),
+            hjust = 1.1, vjust = 1.1, 
+            nudge_x = -max(final_long_data$wavelength) * 0.05, 
+            nudge_y = -0.05)+
+  labs(title = "Deviations from Base 1 for Reflectance ASD3:ASD4",
+       y = "Reflectance Ratio",
+       x = "Wavelength",
+       color = "Ratio Type")
+
+# Show the plot
+p
+
 
 desired_name <- file_path_sans_ext(basename(dirname((dirname(file_path)))))
 
@@ -279,11 +337,69 @@ desired_name <- file_path_sans_ext(basename(dirname((dirname(file_path)))))
 target_directory <- dirname(dirname(file_path))
 
 
-
-# Create new names for each data frame
-file_name_SVC <- file.path(target_directory, paste0(desired_name, "_SVC.csv"))
-file_name_ASD3 <- file.path(target_directory, paste0(desired_name, "_ASD3.csv"))
-file_name_ASD4 <- file.path(target_directory, paste0(desired_name, "_ASD4.csv"))
+# Constructing the save path for the graph
+save_path <- file.path(target_directory, paste0(desired_name, "_ASD3_ASD4.png"))
 
 # Saving the graph
-ggsave(filename = save_path, plot = graph, width = 10, height = 6)
+ggsave(filename = save_path, plot = p, width = 16, height = 8)
+
+
+
+
+
+
+####################################SVC v/s ASD4########################################################
+# Filter out only the relevant columns (wavelength and Ratio_SVC_ASD4_*)
+final_long_data <- final_merged_data %>% 
+  select(wavelength, starts_with("Ratio_SVC_ASD4")) %>% 
+  gather(key = "RatioType", value = "Value", -wavelength)
+
+
+# Calculate the absolute difference between each ratio and 1
+final_long_data$Abs_Difference_From_1 <- abs(final_long_data$Value - 1)
+
+# Calculate the average distance from 1 for each ratio type
+average_distances <- final_long_data %>%
+  group_by(RatioType) %>%
+  summarise(Avg_Distance = mean(Abs_Difference_From_1))
+
+# Calculate the average of the average distances
+overall_avg_distance <- mean(average_distances$Avg_Distance)
+
+# print(paste("The overall average distance from 1 is:", overall_avg_distance))
+# 
+
+
+# Create the ggplot
+p <- ggplot(final_long_data, aes(x = wavelength, y = Value, color = RatioType)) +
+  geom_line() +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 1 - overall_avg_distance, linetype = "dotted", color = "blue") +
+  annotate("text", x = Inf, y = 1, label = "1", hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  annotate("text", x = Inf, y = 1 - overall_avg_distance, label = paste("1 - ", round(overall_avg_distance, 3)), hjust = 1.1, vjust = 0, fontface = "bold", color = "red") +
+  geom_text(data = average_distances, 
+            aes(x = Inf, y = Inf, label = paste("Avg Distance from base, y=1: ", round(overall_avg_distance, 3))),
+            hjust = 1.1, vjust = 1.1, 
+            nudge_x = -max(final_long_data$wavelength) * 0.05, 
+            nudge_y = -0.05)+
+  labs(title = "Deviations from Base 1 for Reflectance SVC:ASD4",
+       y = "Reflectance Ratio",
+       x = "Wavelength",
+       color = "Ratio Type")
+
+# Show the plot
+p
+
+
+desired_name <- file_path_sans_ext(basename(dirname((dirname(file_path)))))
+
+# Extract target directory to save files
+target_directory <- dirname(dirname(file_path))
+
+
+# Constructing the save path for the graph
+save_path <- file.path(target_directory, paste0(desired_name, "_SVC_ASD4.png"))
+
+# Saving the graph
+ggsave(filename = save_path, plot = p, width = 16, height = 8)
+
