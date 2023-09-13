@@ -46,6 +46,9 @@ melted_spectra$wavelength = as.numeric(levels(melted_spectra$wavelength))[melted
 
 melted_spectra[, fraction_reflectance := (reflectance/100)]
 
+# # Round the 'wavelength' column to the nearest integer
+# melted_spectra$wavelength <- round(melted_spectra$wavelength)
+
 
 graph <- ggplot(data = melted_spectra, aes(x=wavelength, y=fraction_reflectance, group=Sample, color=Group)) +
   geom_line() +
