@@ -119,10 +119,6 @@ setDT(spectra_for_comparison)
 melted_spectra_ASD3 <- melt(spectra_for_comparison, id.vars = c("Group", "Sample"), variable.name = "wavelength", value.name = "reflectance")
 melted_spectra_ASD3$wavelength = as.numeric(levels(melted_spectra_ASD3$wavelength))[melted_spectra_ASD3$wavelength]
 
-# Interpolate function
-interpolate_reflectance <- function(wavelength, reflectance, new_wavelength) {
-  approx(x = wavelength, y = reflectance, xout = new_wavelength)$y
-}
 
 # # Add method identifier
 # melted_spectra_SVC$method <- "SVC"
@@ -150,7 +146,12 @@ file_name_ASD3 <- file.path(target_directory, paste0(desired_name, "_ASD3.csv"))
 file_name_ASD4 <- file.path(target_directory, paste0(desired_name, "_ASD4.csv"))
 
 
-
+# https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/splinefun
+# Create a function to interpolate values
+interpolate_column <- function(column_data, wavelengths, all_wavelengths){
+  spline_interpolator <- splinefun(wavelengths, column_data, method = "natural")
+  return(spline_interpolator(all_wavelengths))
+}
 
 # # Save data frames to CSV
 # write.csv(melted_spectra_SVC, file_name_SVC, row.names = FALSE)
@@ -164,6 +165,28 @@ df_transformed_SVC <- melted_spectra_SVC %>%
 
 # Round the 'wavelength' column to the nearest integer
 df_transformed_SVC$wavelength <- round(df_transformed_SVC$wavelength)
+
+# interpolate SVC columns for every wavelength
+# Extract the minimum and maximum wavelength from the dataframe
+min_wavelength <- min(df_transformed_SVC$wavelength)
+max_wavelength <- max(df_transformed_SVC$wavelength)
+
+# Get all wavelengths from the minimum to the maximum
+all_wavelengths <- min_wavelength:max_wavelength
+
+# Apply the function to all columns excluding "wavelength"
+new_data <- lapply(df_transformed_SVC[-1], interpolate_column, wavelengths = df_transformed_SVC$wavelength, all_wavelengths = all_wavelengths)
+
+# Convert the list back to a dataframe
+new_df <- as.data.frame(new_data)
+new_df$wavelength <- all_wavelengths
+
+# Bind original data and new interpolated data, remove duplicates and sort
+df_transformed_SVC <- bind_rows(df_transformed_SVC, new_df) %>%
+  distinct(wavelength, .keep_all = TRUE) %>%
+  arrange(wavelength)
+
+
 
 # Transform the data
 df_transformed_ASD3 <- melted_spectra_ASD3 %>%
@@ -221,9 +244,9 @@ for (col in 1:length(cols_SVC)) {
   print(paste("For column:", cols_SVC[col]))
   final_merged_data[paste0("Ratio_SVC_ASD3_", cols_SVC[col])] <- final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD3[col]]]
   final_merged_data[paste0("Ratio_SVC_ASD4_", cols_SVC[col])] <- final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD4[col]]]
-  final_merged_data[paste0("Ratio_SVC_ASD4_", cols_ASD3[col])] <- final_merged_data[[cols_ASD3[col]]] / final_merged_data[[cols_ASD4[col]]]
+  final_merged_data[paste0("Ratio_ASD3_ASD4_", cols_ASD3[col])] <- final_merged_data[[cols_ASD3[col]]] / final_merged_data[[cols_ASD4[col]]]
   # You can also print the ratios before adding them to the dataframe
-  print(head(final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD3[col]]]))
+  # print(head(final_merged_data[[cols_SVC[col]]] / final_merged_data[[cols_ASD3[col]]]))
 }
 
 file_merged_data_wr <- file.path(target_directory, paste0(desired_name, "_merged_wr.csv"))
