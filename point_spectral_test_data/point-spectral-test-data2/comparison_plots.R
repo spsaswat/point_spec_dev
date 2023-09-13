@@ -18,7 +18,7 @@ metadata <- read.csv(meta_path, stringsAsFactors = FALSE)
 file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2022-08-23_MC_test_SVC\\all_reflectance.csv"
 raw_ASD_text_export <- read.csv(file_path)
 
-spectral_data <- transpose(raw_ASD_text_export, make.names = "Wavelength")
+spectral_data <- data.table::transpose(raw_ASD_text_export, make.names = "Wavelength")
 
 spectral_data <- cbind(Sample = 0, Group = 0, spectral_data)
 
@@ -58,7 +58,7 @@ melted_spectra_SVC[, reflectance := (reflectance/100)]
 file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2023-08-22-MC_test_ASD4\\all.txt"
 raw_ASD_text_export <- read.csv(file_path)
 
-spectral_data <- transpose(raw_ASD_text_export, make.names = "Wavelength")
+spectral_data <- data.table::transpose(raw_ASD_text_export, make.names = "Wavelength")
 
 spectral_data <- cbind(Sample = 0, Group = 0, spectral_data)
 
@@ -112,6 +112,7 @@ exclude_names <- metadata$name[toupper(metadata$ignore) == "Y"]
 # Filter spectral_data to exclude rows with Group values in exclude_names
 spectra_for_comparison <- spectral_data[!spectral_data$Group %in% exclude_names, ]
 
+
 # Convert to data.table
 setDT(spectra_for_comparison)
 
@@ -123,10 +124,10 @@ interpolate_reflectance <- function(wavelength, reflectance, new_wavelength) {
   approx(x = wavelength, y = reflectance, xout = new_wavelength)$y
 }
 
-# Add method identifier
-melted_spectra_SVC$method <- "SVC"
-melted_spectra_ASD3$method <- "ASD3"
-melted_spectra_ASD4$method <- "ASD4"
+# # Add method identifier
+# melted_spectra_SVC$method <- "SVC"
+# melted_spectra_ASD3$method <- "ASD3"
+# melted_spectra_ASD4$method <- "ASD4"
 
 # file_path <- "D:\\Projects\\AnacondaFiles\\APPF_codes\\point_spec_dev\\point_spectral_test_data\\point-spectral-test-data2\\2023-08-22-MC_test_ASD4\\all.txt"
 # Extract directory name from file_path
@@ -158,24 +159,24 @@ file_name_ASD4 <- file.path(target_directory, paste0(desired_name, "_ASD4.csv"))
 
 # Transform the data
 df_transformed_SVC <- melted_spectra_SVC %>%
-  select(-method) %>%  # remove 'method' if you want to keep it, remove this line
-  pivot_wider(names_from = Group, values_from = reflectance) %>%
-  mutate(method = "SVC")  # add 'method' back with a constant value
+  # select(-method) %>%  # remove 'method' if you want to keep it, remove this line
+  pivot_wider(names_from = Group, values_from = reflectance)
 
 # Round the 'wavelength' column to the nearest integer
 df_transformed_SVC$wavelength <- round(df_transformed_SVC$wavelength)
 
 # Transform the data
 df_transformed_ASD3 <- melted_spectra_ASD3 %>%
-  select(-method) %>%  # remove 'method' if you want to keep it, remove this line
-  pivot_wider(names_from = Group, values_from = reflectance) %>%
-  mutate(method = "ASD3")  # add 'method' back with a constant value
+  pivot_wider(names_from = Group, values_from = reflectance)
 
 # Transform the data
 df_transformed_ASD4 <- melted_spectra_ASD4 %>%
-  select(-method) %>%  # remove 'method' if you want to keep it, remove this line
-  pivot_wider(names_from = Group, values_from = reflectance) %>%
-  mutate(method = "ASD4")  # add 'method' back with a constant value
+  pivot_wider(names_from = Group, values_from = reflectance)
+
+# Add a method column to SVC
+df_transformed_SVC$method <- "SVC"
+df_transformed_ASD3$method <- "ASD3"
+df_transformed_ASD4$method <- "ASD4"
 
 # Save the transformed data back to CSV if needed
 write.csv(df_transformed_SVC, file_name_SVC, row.names = FALSE)
