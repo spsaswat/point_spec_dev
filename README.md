@@ -2,7 +2,7 @@
 
 Code to get the spectra graph from three devices: ASD Fieldspec 3, [ASD Fieldspec 4](https://www.malvernpanalytical.com/en/products/product-range/asd-range/fieldspec-range), and [SVC HR-1024i Spectroradiometer](https://spectravista.com/instruments/hr-1024i/).
 
-SVC has different file format than the ASD3 and ASD4. Run svc_format2ASD.R to convert it to a similar file format as ASD.
+SVC has a different file format than the ASD3 and ASD4. Run svc_format2ASD.R to convert it to a similar file format as ASD. Also, the SVCC does not have a default resampling of wavelengths to get reflectance for every nanometer. ASD used cubic spline interpolation to get reflectance for every wavelength. The same has been implemented for SVC. 
 
 The output graph (.png) file will have the same name as the input file (like all.txt or all_reflect.csv will have output as all.png or all_reflectance.png). 
 
